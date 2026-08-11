@@ -10,6 +10,10 @@
 
 #    RndBotSync.Enabled
 #        Default: 1 (0 = off)
+#        This module disables itself with an error in the log if either
+#        AiPlayerbot.LevelBrackets.Enabled or AiPlayerbot.ResetBotLevel.Enabled
+#        is on: mod-playerbots re-levels random bots itself, and running both
+#        means two systems fighting over every bot's level.
 RndBotSync.Enabled = 1
 
 #    RndBotSync.CheckFrequency
