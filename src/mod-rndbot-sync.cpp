@@ -106,6 +106,20 @@ static void LoadConfig()
     g_RandomBotMaxLevel = static_cast<uint8>(sConfigMgr->GetOption<uint32>("AiPlayerbot.RandomBotMaxLevel", 80));
     g_RandomBotAccountPrefix = sConfigMgr->GetOption<std::string>("AiPlayerbot.RandomBotAccountPrefix", "rndbot");
 
+    // mod-playerbots ships its own random-bot re-leveling (level brackets, level reset). Running
+    // either alongside this module means two systems fighting over every bot's level, so stand
+    // down. Read straight from config so this is order-independent of mod-playerbots' own init.
+    for (char const* option : { "AiPlayerbot.LevelBrackets.Enabled", "AiPlayerbot.ResetBotLevel.Enabled" })
+    {
+        if (g_Enabled && sConfigMgr->GetOption<bool>(option, false))
+        {
+            LOG_ERROR("server.loading",
+                      "[RndBotSync] Disabling: {} is enabled. mod-playerbots re-levels random bots itself; "
+                      "running both fights over every bot's level. Set one of the two to 0.", option);
+            g_Enabled = false;
+        }
+    }
+
     std::string excludeNames = sConfigMgr->GetOption<std::string>("RndBotSync.ExcludeNames", "");
     g_ExcludeBotNames.clear();
     std::istringstream stream(excludeNames);
@@ -484,8 +498,8 @@ static bool IsBotSafeToAdjust(Player* bot)
 
 // Sets a single bot's level to a random value in [lower, upper] and re-randomizes
 // gear/stats. Used both to raise (promote) and lower (downlevel) a bot. Death
-// Knights are floored at 55; if the range is entirely below 55 the bot is
-// skipped. Returns false (no change) for bots that are logging out or not safe
+// Knights are floored at the heroic start level; if the range is entirely below
+// it the bot is skipped. Returns false (no change) for bots that are logging out or not safe
 // to change right now (dead, in combat, in an instance/queue, in flight).
 static bool SetBotLevelInRange(Player* bot, int lower, int upper)
 {
@@ -502,13 +516,14 @@ static bool SetBotLevelInRange(Player* bot, int lower, int upper)
 
     if (bot->getClass() == CLASS_DEATH_KNIGHT)
     {
-        if (upper < 55)
+        int const dkMinLevel = static_cast<int>(sWorld->getIntConfig(CONFIG_START_HEROIC_PLAYER_LEVEL));
+        if (upper < dkMinLevel)
         {
             return false;
         }
-        if (lower < 55)
+        if (lower < dkMinLevel)
         {
-            lower = 55;
+            lower = dkMinLevel;
         }
     }
     if (lower > upper)
