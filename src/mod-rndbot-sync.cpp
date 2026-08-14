@@ -146,7 +146,12 @@ static bool IsPlayerRandomBot(Player* player)
 // A real (human) player, as opposed to any mod-playerbots bot. Reads the bot
 // flag set on the session at creation, so it is reliable even before a bot's
 // PlayerbotAI is registered (which only happens after the login hook fires).
-static bool IsRealPlayer(Player* player)
+//
+// Deliberately not mod-playerbots' own ::IsRealPlayer (PlayerbotAI.h): that one
+// tests !GET_PLAYERBOT_AI(player), which reports bots as human during
+// OnPlayerLogin and would let a bot become the level target. Named differently
+// so this never collides with that declaration again.
+static bool IsHumanPlayer(Player* player)
 {
     return player && player->GetSession() && !player->GetSession()->IsBot();
 }
@@ -576,7 +581,7 @@ static void RunAdjustmentPass(bool unlimitedBudget = false)
             continue;
         }
 
-        if (IsRealPlayer(player))
+        if (IsHumanPlayer(player))
         {
             // Real player: highest-level one is the target.
             if (static_cast<int>(player->GetLevel()) > target)
@@ -793,7 +798,7 @@ public:
 
     void OnPlayerLogin(Player* player) override
     {
-        if (!g_Enabled || !IsRealPlayer(player))
+        if (!g_Enabled || !IsHumanPlayer(player))
         {
             return;
         }
@@ -806,7 +811,7 @@ public:
 
     void OnPlayerLevelChanged(Player* player, uint8 /*oldLevel*/) override
     {
-        if (!g_Enabled || !IsRealPlayer(player))
+        if (!g_Enabled || !IsHumanPlayer(player))
         {
             return;
         }
@@ -856,7 +861,7 @@ public:
             {
                 continue;
             }
-            if (IsRealPlayer(player) && static_cast<int>(player->GetLevel()) > target)
+            if (IsHumanPlayer(player) && static_cast<int>(player->GetLevel()) > target)
             {
                 target = static_cast<int>(player->GetLevel());
                 targetPlayer = player;
@@ -880,7 +885,7 @@ public:
             for (auto const& itr : players)
             {
                 Player* bot = itr.second;
-                if (!bot || !bot->IsInWorld() || IsRealPlayer(bot))
+                if (!bot || !bot->IsInWorld() || IsHumanPlayer(bot))
                 {
                     continue;
                 }
