@@ -509,7 +509,7 @@ static bool IsBotSafeToAdjust(Player* bot)
 static bool SetBotLevelInRange(Player* bot, int lower, int upper)
 {
     if (!bot || !bot->IsInWorld() || !bot->GetSession() ||
-        bot->GetSession()->isLogingOut() || bot->IsDuringRemoveFromWorld())
+        bot->GetSession()->IsLoggingOut() || bot->IsDuringRemoveFromWorld())
     {
         return false;
     }
