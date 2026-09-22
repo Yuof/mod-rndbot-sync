@@ -657,9 +657,13 @@ static void RunAdjustmentPass(bool unlimitedBudget = false)
             {
                 break;
             }
-            // Scatter across [RandomBotMinLevel, ceiling]. Unsafe bots (combat,
+            // Scatter across [RandomBotMinLevel, ceiling] to keep a level spread.
+            // A bot the player deliberately guilded is a companion, not filler:
+            // keep it in the band instead (only reachable with
+            // IgnoreGuildBotsWithRealPlayers = 0). Unsafe bots (combat,
             // instance, flight, ...) are skipped without spending budget.
-            if (SetBotLevelInRange(bot, g_RandomBotMinLevel, ceiling))
+            int const lower = BotInRealPlayerGuild(bot) ? bandLower : static_cast<int>(g_RandomBotMinLevel);
+            if (SetBotLevelInRange(bot, lower, ceiling))
             {
                 ++downleveled;
                 if (!unlimited)
