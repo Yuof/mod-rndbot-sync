@@ -465,8 +465,14 @@ static void UpdateGlobalGearCap(Player* targetPlayer)
         return;
     }
 
-    // Clamp to >= 1 so the cap is never the "unlimited" sentinel.
-    sPlayerbotAIConfig.randomGearScoreLimit = std::max<int32>(1, static_cast<int32>(ilvl));
+    // mod-playerbots only applies the cap to green+ candidates; whites bypass it.
+    // Leveling gear of every quality sits at ilvl = required level + 5, so a cap
+    // at a leveling player's average ilvl starves the bots kept at/above their
+    // level of greens and blues and they come out in whites. Floor the cap at
+    // what a bot at the level ceiling needs; once the player outgears the
+    // leveling curve (dungeons, raids) their own ilvl takes over.
+    int32 const capFloor = static_cast<int32>(targetPlayer->GetLevel() + g_TargetBand) + 5;
+    sPlayerbotAIConfig.randomGearScoreLimit = std::max<int32>(capFloor, static_cast<int32>(ilvl));
 
     if (g_FullDebug || g_LiteDebug)
     {
