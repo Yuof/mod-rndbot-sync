@@ -73,7 +73,7 @@ static uint32 g_DkRequiredState = 13;              // PROGRESSION_TBC_TIER_5
 static bool   g_FullDebug = false;
 static bool   g_LiteDebug = false;
 static bool  g_IlvlSyncEnabled = true;      // cap bot gear at the player's ilvl
-static int32 g_OriginalGearScoreLimit = 0;  // configured AiPlayerbot.RandomGearScoreLimit
+static int32 g_OriginalGearScoreLimit = 0;  // configured Playerbots.RandomGearScoreLimit
 
 // Pulled from mod-playerbots config.
 static uint8  g_RandomBotMinLevel = 1;
@@ -98,18 +98,18 @@ static void LoadConfig()
     g_IlvlSyncEnabled = sConfigMgr->GetOption<bool>("RndBotSync.IlvlSync.Enabled", true);
     // Read directly from config so it is order-independent of mod-playerbots and
     // reflects the user's configured value (the cap we restore to when off).
-    g_OriginalGearScoreLimit = sConfigMgr->GetOption<int32>("AiPlayerbot.RandomGearScoreLimit", 0);
+    g_OriginalGearScoreLimit = sConfigMgr->GetOption<int32>("Playerbots.RandomGearScoreLimit", 0);
     g_FullDebug = sConfigMgr->GetOption<bool>("RndBotSync.FullDebugMode", false);
     g_LiteDebug = sConfigMgr->GetOption<bool>("RndBotSync.LiteDebugMode", false);
 
-    g_RandomBotMinLevel = static_cast<uint8>(sConfigMgr->GetOption<uint32>("AiPlayerbot.RandomBotMinLevel", 1));
-    g_RandomBotMaxLevel = static_cast<uint8>(sConfigMgr->GetOption<uint32>("AiPlayerbot.RandomBotMaxLevel", 80));
-    g_RandomBotAccountPrefix = sConfigMgr->GetOption<std::string>("AiPlayerbot.RandomBotAccountPrefix", "rndbot");
+    g_RandomBotMinLevel = static_cast<uint8>(sConfigMgr->GetOption<uint32>("Playerbots.RandomBotMinLevel", 1));
+    g_RandomBotMaxLevel = static_cast<uint8>(sConfigMgr->GetOption<uint32>("Playerbots.RandomBotMaxLevel", 80));
+    g_RandomBotAccountPrefix = sConfigMgr->GetOption<std::string>("Playerbots.RandomBotAccountPrefix", "rndbot");
 
     // mod-playerbots ships its own random-bot re-leveling (level brackets, level reset). Running
     // either alongside this module means two systems fighting over every bot's level, so stand
     // down. Read straight from config so this is order-independent of mod-playerbots' own init.
-    for (char const* option : { "AiPlayerbot.LevelBrackets.Enabled", "AiPlayerbot.ResetBotLevel.Enabled" })
+    for (char const* option : { "Playerbots.LevelBrackets.Enabled", "Playerbots.ResetBotLevel.Enabled" })
     {
         if (g_Enabled && sConfigMgr->GetOption<bool>(option, false))
         {
@@ -226,7 +226,7 @@ static bool GetRealPlayerAccountIds(std::string& accountIdsOut)
     accountIdsOut.clear();
     if (g_RandomBotAccountPrefix.empty())
     {
-        LOG_WARN("server.loading", "[RndBotSync] AiPlayerbot.RandomBotAccountPrefix is empty; cannot identify real accounts.");
+        LOG_WARN("server.loading", "[RndBotSync] Playerbots.RandomBotAccountPrefix is empty; cannot identify real accounts.");
         return false;
     }
 
@@ -305,14 +305,14 @@ static void EvaluateDeathKnightGate()
 
     if (g_DkUnlocked)
     {
-        sPlayerbotAIConfig.disableDeathKnightLogin = false;
+        sPlayerbotAIConfig.DisableDeathKnightLogin = false;
         return;
     }
 
     std::string accountIds;
     if (!GetRealPlayerAccountIds(accountIds))
     {
-        sPlayerbotAIConfig.disableDeathKnightLogin = true;
+        sPlayerbotAIConfig.DisableDeathKnightLogin = true;
         return;
     }
 
@@ -326,7 +326,7 @@ static void EvaluateDeathKnightGate()
     if (result)
     {
         g_DkUnlocked = true;
-        sPlayerbotAIConfig.disableDeathKnightLogin = false;
+        sPlayerbotAIConfig.DisableDeathKnightLogin = false;
         if (g_FullDebug || g_LiteDebug)
         {
             LOG_INFO("server.loading", "[RndBotSync] DK gate met (state {}); Death Knight bots unlocked.", g_DkRequiredState);
@@ -334,7 +334,7 @@ static void EvaluateDeathKnightGate()
     }
     else
     {
-        sPlayerbotAIConfig.disableDeathKnightLogin = true;
+        sPlayerbotAIConfig.DisableDeathKnightLogin = true;
         if (g_FullDebug)
         {
             LOG_INFO("server.loading", "[RndBotSync] DK gate not met (state {}); Death Knight bots blocked.", g_DkRequiredState);
@@ -452,7 +452,7 @@ static void UpdateGlobalGearCap(Player* targetPlayer)
 {
     if (!g_IlvlSyncEnabled || !targetPlayer)
     {
-        sPlayerbotAIConfig.randomGearScoreLimit = g_OriginalGearScoreLimit;
+        sPlayerbotAIConfig.RandomGearScoreLimit = g_OriginalGearScoreLimit;
         return;
     }
 
@@ -461,7 +461,7 @@ static void UpdateGlobalGearCap(Player* targetPlayer)
     {
         // Player owns nothing equippable: don't set 0 (mod-playerbots treats 0 as
         // "unlimited"); leave the configured cap in place.
-        sPlayerbotAIConfig.randomGearScoreLimit = g_OriginalGearScoreLimit;
+        sPlayerbotAIConfig.RandomGearScoreLimit = g_OriginalGearScoreLimit;
         return;
     }
 
@@ -472,12 +472,12 @@ static void UpdateGlobalGearCap(Player* targetPlayer)
     // what a bot at the level ceiling needs; once the player outgears the
     // leveling curve (dungeons, raids) their own ilvl takes over.
     int32 const capFloor = static_cast<int32>(targetPlayer->GetLevel() + g_TargetBand) + 5;
-    sPlayerbotAIConfig.randomGearScoreLimit = std::max<int32>(capFloor, static_cast<int32>(ilvl));
+    sPlayerbotAIConfig.RandomGearScoreLimit = std::max<int32>(capFloor, static_cast<int32>(ilvl));
 
     if (g_FullDebug || g_LiteDebug)
     {
         LOG_INFO("server.loading", "[RndBotSync] Gear cap set to item level {} (player '{}').",
-                 sPlayerbotAIConfig.randomGearScoreLimit, targetPlayer->GetName());
+                 sPlayerbotAIConfig.RandomGearScoreLimit, targetPlayer->GetName());
     }
 }
 
@@ -554,7 +554,7 @@ static bool SetBotLevelInRange(Player* bot, int lower, int upper)
 
     // Known mod-playerbots quirk: re-init talents when rolling to max level with
     // equip/spec persistence enabled.
-    if (newLevel == g_RandomBotMaxLevel && sPlayerbotAIConfig.equipAndSpecPersistence)
+    if (newLevel == g_RandomBotMaxLevel && sPlayerbotAIConfig.EquipAndSpecPersistence)
     {
         PlayerbotFactory talentFactory(bot, newLevel);
         talentFactory.InitTalentsTree(false, true, true);
@@ -928,7 +928,7 @@ public:
         }
 
         handler->PSendSysMessage("  IlvlSync: {}, gear cap: {}, target best item level: {}.",
-                                 g_IlvlSyncEnabled, sPlayerbotAIConfig.randomGearScoreLimit,
+                                 g_IlvlSyncEnabled, sPlayerbotAIConfig.RandomGearScoreLimit,
                                  targetPlayer ? GetBestOwnedItemLevel(targetPlayer) : 0);
         handler->PSendSysMessage("  DK gate: {}, {} (RequiredState {}).",
                                  g_DkProgressionEnabled, g_DkUnlocked ? "unlocked" : "locked", g_DkRequiredState);

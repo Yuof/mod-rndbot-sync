@@ -11,7 +11,7 @@
 #    RndBotSync.Enabled
 #        Default: 1 (0 = off)
 #        This module disables itself with an error in the log if either
-#        AiPlayerbot.LevelBrackets.Enabled or AiPlayerbot.ResetBotLevel.Enabled
+#        Playerbots.LevelBrackets.Enabled or Playerbots.ResetBotLevel.Enabled
 #        is on: mod-playerbots re-levels random bots itself, and running both
 #        means two systems fighting over every bot's level.
 RndBotSync.Enabled = 1
@@ -71,7 +71,7 @@ RndBotSync.GuildCacheRefreshFrequency = 600
 #    RndBotSync.DeathKnightProgression.Enabled
 #        When 1, block Death Knight bots from the world until a real-player
 #        account reaches the required mod-individual-progression state. When 0,
-#        the module does not touch AiPlayerbot.DisableDeathKnightLogin.
+#        the module does not touch Playerbots.DisableDeathKnightLogin.
 #        Default: 0
 RndBotSync.DeathKnightProgression.Enabled = 0
 
@@ -82,7 +82,7 @@ RndBotSync.DeathKnightProgression.RequiredState = 13
 
 #    RndBotSync.IlvlSync.Enabled
 #        When 1, cap random-bot gear at the highest online real player's item
-#        level by driving AiPlayerbot.RandomGearScoreLimit at runtime (item level
+#        level by driving Playerbots.RandomGearScoreLimit at runtime (item level
 #        is computed from the player's best owned gear, equipped + bags). Caps
 #        newly initialized bots and all re-randomizations. Quality is unchanged.
 #        When 0, the module restores your configured RandomGearScoreLimit.
